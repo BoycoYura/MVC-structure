@@ -9,6 +9,7 @@
 
 
 	// 2. Подключение файлов системы
+	define('ROOT', dirname(__FILE__));
 	require_once('components/Router.php');
 
 	// 3. Установка соединения с БД
