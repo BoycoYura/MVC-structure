@@ -13,7 +13,7 @@
 		
 		private function getURI(){
 			if (!empty($_SERVER['REQUEST_URI'])) {
-				return trim($_SERVER['REQUEST_URI'],'');
+				return trim($_SERVER['REQUEST_URI'],'/');
 				// substr($_SERVER['REQUEST_URI'], strlen('/локальный адрес сайта/'));﻿
 			}			
 		}
@@ -23,25 +23,42 @@
 
 			foreach ($this->routes as $uriPattern => $path) {
 				if(preg_match("~$uriPattern~", $uri)){
-					$segments = explode('/', $path);
+/*------------------------------------------------------------------------------*/
+				//Получаем внутренний путь из внешнего согласно правилу
+				$internalRoute = preg_replace("~$uriPattern~", $path, $uri);
+/*------------------------------------------------------------------------------*/				
+				//Определить контроллер, action, параметры
+				$segments = explode('/', $internalRoute);
 
-					$controllerName =  array_shift($segments).'Controller';
-					$controllerName = ucfirst($controllerName);
+				$controllerName =  array_shift($segments).'Controller';
+				$controllerName = ucfirst($controllerName);
 
-					$actionName = 'action'.ucfirst(array_shift($segments));
+				$actionName = 'action'.ucfirst(array_shift($segments));
 
-					$controllerFile = ROOT.'/controllers/'.$controllerName.'.php';
+				// echo "<br>conttroller name:$controllerName";
+				// echo "<br>action name:$actionName";
 
+				$parameters = $segments;
+/*------------------------------------------------------------------------------*/
+				//Определить контроллер, action, параметры
 
-					if (file_exists($controllerFile)) {
-						include_once ($controllerFile);
-					}
+				$controllerFile = ROOT . '/controllers/'.
+                $controllerName . '.php';
 
-					$controllerObject = new $controllerName;
-					$result = $controllerObject->$actionName();
-					if($result != null){
-						break;
-					}
+				if (file_exists($controllerFile)) {
+					include_once($controllerFile);
+				}
+/*------------------------------------------------------------------------------*/
+				//Создать обьект, вызвать метод (т.е action)
+				$contollerObject = new $controllerName;
+
+				$result = call_user_func_array(array($contollerObject,$actionName), $parameters);
+				// $result = $contollerObject->$actionName($parameters);
+
+				if ($result != null) {
+					break;
+				}
+/*------------------------------------------------------------------------------*/
 				}
 			}
 		}
